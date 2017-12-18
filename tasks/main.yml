@@ -1,0 +1,63 @@
+---
+# tasks file for bc.lxc
+
+- name: Ensure LXC packages are installed.
+  apt:
+    name: "{{ item }}"
+  with_items:
+    - lxc
+    - python-lxc
+    - debootstrap
+    - bridge-utils
+
+- name: Setup default template for new containers
+  template:
+    src: singlecontainer.conf.j2
+    dest: /etc/lxc/default.conf
+
+- name: Create LXC container
+  lxc_container:
+    name: "{{ container_name }}"
+    template: debian
+    template_options: --release stretch
+    state: started
+  register: container_info
+
+- name: Print container info
+  debug:
+    var: container_info
+    verbosity: 4
+
+- name: Wait for the network to be setup in the containers
+  when: container_info|changed
+  pause: seconds=5
+
+- name: Setup the container SSH
+  lxc_container:
+    name: "{{ container_name }}"
+    container_command: apt-get update && apt-get install -y python-minimal openssh-server iputils-ping
+
+- name: Create .ssh folder on container /root/
+  file:
+    dest: "/var/lib/lxc/{{ container_name }}/rootfs/root/.ssh/"
+    state: directory
+    mode: 0700
+
+- name: Set up authorized key from local ansible user on container
+  authorized_key:
+    user: "{{ ansible_user_id }}"
+    key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+    path: "/var/lib/lxc/{{ container_name }}/rootfs/root/.ssh/authorized_keys"
+    state: present
+
+- name: Add host to in-memory inventory
+  add_host:
+    name: "{{ container_info.lxc_container.name }}"
+    ansible_host: "{{ ansible_ssh_host }}"
+    ansible_port: 26
+    groups: ["{{ location }}", "{{ type }}", "lxc"]
+
+# Only works on aufs, zfs or overlayfs
+#- name: Create a snapshot of the container
+#  command: lxc-snapshot -n "{{ container_name }}"
+
