@@ -1,2 +1,3 @@
 ---
-# defaults file for bc.lxc
+container_name: "{{ {{ inventory_hostname}} | regex_replace('host.') }}"
+zfs_root: "storage/{{ container_name }}/rootfs"

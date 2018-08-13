@@ -20,6 +20,8 @@
     name: "{{ container_name }}"
     template: debian
     template_options: --release stretch
+    backing_store: zfs
+    zfs_root: "{{ zfs_root }}"
     state: started
   register: container_info
 
@@ -60,4 +62,3 @@
 # Only works on aufs, zfs or overlayfs
 #- name: Create a snapshot of the container
 #  command: lxc-snapshot -n "{{ container_name }}"
-
