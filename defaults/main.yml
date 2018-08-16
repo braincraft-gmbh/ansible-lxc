@@ -1,3 +1,5 @@
 ---
 container_name: "{{ {{ inventory_hostname}} | regex_replace('host.') }}"
 zfs_root: "storage/{{ container_name }}/rootfs"
+
+# host_interface_phys: "eno2"     # phys interface from host, to be mounted in container as eth1
