@@ -15,12 +15,16 @@
     src: singlecontainer.conf.j2
     dest: /etc/lxc/default.conf
 
+- set_fact:
+    lxc_backing_store: 'zfs'
+  when: zfs_root is defined
+
 - name: Create LXC container
   lxc_container:
     name: "{{ container_name }}"
     template: debian
     template_options: --release stretch
-    backing_store: zfs
+    backing_store: "{{ lxc_backing_store | default('dir') }}"
     zfs_root: "{{ zfs_root }}"
     state: started
   register: container_info
@@ -60,5 +64,6 @@
     groups: ["{{ location }}", "{{ type }}", "lxc"]
 
 # Only works on aufs, zfs or overlayfs
-#- name: Create a snapshot of the container
-#  command: lxc-snapshot -n "{{ container_name }}"
+- name: Create a snapshot of the container
+  command: lxc-snapshot -n "{{ container_name }}"
+  when: lxc_backing_store == 'zfs'
