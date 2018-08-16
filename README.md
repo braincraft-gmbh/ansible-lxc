@@ -15,7 +15,8 @@ bridge_interface: lxcbr0
 
 The following variables are undefined per default and will trigger additional setup when defined within the playbooks/run:
 
-host_interface_phys: eno2 # physical interface from host, to be mounted in container as eth1
+zfs_root: "storage/{{ container_name }}/rootfs"   # will make lxc use the zfs backend
+host_interface_phys: "eno2" # physical interface from host, to be mounted in container as eth1
 
 
 Dependencies
