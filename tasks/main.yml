@@ -59,11 +59,6 @@
 - name: Add host to in-memory inventory
   add_host:
     name: "{{ container_info.lxc_container.name }}"
-    ansible_host: "{{ ansible_ssh_host }}"
+    ansible_host: "{{ ansible_host }}"
     ansible_port: 26
     groups: ["{{ location }}", "{{ type }}", "lxc"]
-
-# Only works on aufs, zfs or overlayfs
-#- name: Create a snapshot of the container
-#  command: lxc-snapshot -n "{{ container_name }}"
-#  when: lxc_backing_store == 'zfs'
