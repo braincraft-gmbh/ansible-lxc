@@ -19,6 +19,13 @@
     lxc_backing_store: 'zfs'
   when: zfs_root is defined
 
+- name: Increase value of inotify.max_user_instances
+  sysctl:
+    name: fs.inotify.max_user_watches
+    value: 524288
+    sysctl_set: yes
+    reload: yes
+
 - name: Create LXC container
   lxc_container:
     name: "{{ container_name }}"
@@ -33,6 +40,33 @@
   debug:
     var: container_info
     verbosity: 4
+
+- name: Setup host firewall (NAT and port forwarding)
+  block:
+    - name: Enable NAT masquerading
+      iptables:
+        table: nat
+        chain: POSTROUTING
+        out_interface: '{{ masquerade_out_interface }}'
+        source: '{{ masquerade_source }}'
+        destination: '{{ masquerade_destination }}'
+        jump: MASQUERADE
+        protocol: '{{ masquerade_protocol }}'
+        comment: Ansible NAT Masquerade
+    - name: Enable IPv4 forwarding
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: 1
+        sysctl_set: yes
+        state: present
+        reload: yes
+    - name: Forward port 26 from host to container SSH (22)
+      raw: "iptables -t nat -A PREROUTING -i {{ ansible_default_ipv4.interface }} -p tcp -m tcp --dport 26 -j DNAT --to-destination {{ masquerade_source }}:22"
+    - name: Forward port 80 to container
+      raw: "iptables -A PREROUTING -t nat -i {{ ansible_default_ipv4.interface }} -p tcp --dport 80 -j DNAT --to {{ masquerade_source }}:80 && iptables -A FORWARD -p tcp -d {{ masquerade_source }} --dport 80 -j ACCEPT"
+      when: inventory_hostname in groups['webhosts']
+  when: network_setup == 'true'
+  tags: firewall
 
 - name: Wait for the network to be setup in the containers
   when: container_info|changed
