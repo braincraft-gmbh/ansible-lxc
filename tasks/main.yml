@@ -17,7 +17,13 @@
 
 - set_fact:
     lxc_backing_store: 'zfs'
-  when: zfs_root is defined
+  when: not(
+          (zfs_root is undefined)
+          or
+          (zfs_root is none)
+          or
+          (zfs_root | trim == '')
+        )
 
 - name: Increase value of inotify.max_user_instances
   sysctl:
