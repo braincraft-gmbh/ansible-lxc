@@ -15,11 +15,30 @@
     src: singlecontainer.conf.j2
     dest: /etc/lxc/default.conf
 
+- set_fact:
+    lxc_backing_store: 'zfs'
+  when: not(
+          (zfs_root is undefined)
+          or
+          (zfs_root is none)
+          or
+          (zfs_root | trim == '')
+        )
+
+- name: Increase value of inotify.max_user_instances
+  sysctl:
+    name: fs.inotify.max_user_watches
+    value: 524288
+    sysctl_set: yes
+    reload: yes
+
 - name: Create LXC container
   lxc_container:
     name: "{{ container_name }}"
     template: debian
     template_options: --release stretch
+    backing_store: "{{ lxc_backing_store | default('dir') }}"
+    zfs_root: "{{ zfs_root }}"
     state: started
   register: container_info
 
@@ -27,6 +46,33 @@
   debug:
     var: container_info
     verbosity: 4
+
+- name: Setup host firewall (NAT and port forwarding)
+  block:
+    - name: Enable NAT masquerading
+      iptables:
+        table: nat
+        chain: POSTROUTING
+        out_interface: '{{ masquerade_out_interface }}'
+        source: '{{ masquerade_source }}'
+        destination: '{{ masquerade_destination }}'
+        jump: MASQUERADE
+        protocol: '{{ masquerade_protocol }}'
+        comment: Ansible NAT Masquerade
+    - name: Enable IPv4 forwarding
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: 1
+        sysctl_set: yes
+        state: present
+        reload: yes
+    - name: Forward port 26 from host to container SSH (22)
+      raw: "iptables -t nat -A PREROUTING -i {{ ansible_default_ipv4.interface }} -p tcp -m tcp --dport 26 -j DNAT --to-destination {{ masquerade_source }}:22"
+    - name: Forward port 80 to container
+      raw: "iptables -A PREROUTING -t nat -i {{ ansible_default_ipv4.interface }} -p tcp --dport 80 -j DNAT --to {{ masquerade_source }}:80 && iptables -A FORWARD -p tcp -d {{ masquerade_source }} --dport 80 -j ACCEPT"
+      when: inventory_hostname in groups['webhosts']
+  when: network_setup == 'true'
+  tags: firewall
 
 - name: Wait for the network to be setup in the containers
   when: container_info|changed
@@ -53,11 +99,6 @@
 - name: Add host to in-memory inventory
   add_host:
     name: "{{ container_info.lxc_container.name }}"
-    ansible_host: "{{ ansible_ssh_host }}"
+    ansible_host: "{{ ansible_host }}"
     ansible_port: 26
     groups: ["{{ location }}", "{{ type }}", "lxc"]
-
-# Only works on aufs, zfs or overlayfs
-#- name: Create a snapshot of the container
-#  command: lxc-snapshot -n "{{ container_name }}"
-

@@ -1,2 +1,13 @@
 ---
-# defaults file for bc.lxc
+container_name: "{{ {{ inventory_hostname}} | regex_replace('host.') }}"
+network_setup: false
+bridge_interface: lxcbr0
+
+masquerade_out_interface: "{{ ansible_default_ipv4.interface }}"
+masquerade_source: "172.{{ location_sub }}.{{ type_sub }}.{{ number }}"
+masquerade_destination: '0.0.0.0/0'
+masquerade_protocol: 'all'
+
+zfs_root: none
+
+# host_interface_phys: "eno2"     # phys interface from host, to be mounted in container as eth1
