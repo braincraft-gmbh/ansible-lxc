@@ -10,11 +10,6 @@
     - debootstrap
     - bridge-utils
 
-- name: Setup default template for new containers
-  template:
-    src: singlecontainer.conf.j2
-    dest: /etc/lxc/default.conf
-
 - set_fact:
     lxc_backing_store: 'zfs'
   when: not(
@@ -39,8 +34,13 @@
     template_options: --release stretch
     backing_store: "{{ lxc_backing_store | default('dir') }}"
     zfs_root: "{{ zfs_root }}"
-    state: started
   register: container_info
+
+- name: Deploy container configuration from template
+  template:
+    src: container.conf.j2
+    dest: "{{ lxc_root }}/{{ container_name }}/config"
+  notify: restart container
 
 - name: Print container info
   debug:
@@ -85,7 +85,7 @@
 
 - name: Create .ssh folder on container /root/
   file:
-    dest: "/var/lib/lxc/{{ container_name }}/rootfs/root/.ssh/"
+    dest: "{{ lxc_root }}/{{ container_name }}/rootfs/root/.ssh/"
     state: directory
     mode: 0700
 
@@ -93,7 +93,7 @@
   authorized_key:
     user: "{{ ansible_user_id }}"
     key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
-    path: "/var/lib/lxc/{{ container_name }}/rootfs/root/.ssh/authorized_keys"
+    path: "{{ lxc_root }}/{{ container_name }}/rootfs/root/.ssh/authorized_keys"
     state: present
 
 - name: Add host to in-memory inventory

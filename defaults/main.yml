@@ -9,5 +9,6 @@ masquerade_destination: '0.0.0.0/0'
 masquerade_protocol: 'all'
 
 zfs_root: none
+lxc_root: '/var/lib/lxc'
 
 # host_interface_phys: "eno2"     # phys interface from host, to be mounted in container as eth1

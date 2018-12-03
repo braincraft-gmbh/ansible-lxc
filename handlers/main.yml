@@ -1,2 +1,5 @@
 ---
-# handlers file for bc.lxc
+- name: restart container
+  lxc_container:
+    name: "{{ container_name }}"
+    state: restarted
