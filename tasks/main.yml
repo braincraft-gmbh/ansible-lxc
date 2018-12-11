@@ -1,15 +1,4 @@
 ---
-# tasks file for bc.lxc
-
-- name: Ensure LXC packages are installed.
-  apt:
-    name: "{{ item }}"
-  with_items:
-    - lxc
-    - python-lxc
-    - debootstrap
-    - bridge-utils
-
 - set_fact:
     lxc_backing_store: 'zfs'
   when: not(
@@ -19,13 +8,6 @@
           or
           (zfs_root | trim == '')
         )
-
-- name: Increase value of inotify.max_user_instances
-  sysctl:
-    name: fs.inotify.max_user_watches
-    value: 524288
-    sysctl_set: yes
-    reload: yes
 
 - name: Create LXC container
   lxc_container:
