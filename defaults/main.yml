@@ -2,11 +2,7 @@
 container_name: "{{ {{ inventory_hostname}} | regex_replace('host.') }}"
 network_setup: false
 bridge_interface: lxcbr0
-
-masquerade_out_interface: "{{ ansible_default_ipv4.interface }}"
-masquerade_source: "172.{{ location_sub }}.{{ type_sub }}.{{ number }}"
-masquerade_destination: '0.0.0.0/0'
-masquerade_protocol: 'all'
+ip_int: 'dhcp'
 
 zfs_root: none
 lxc_root: '/var/lib/lxc'
