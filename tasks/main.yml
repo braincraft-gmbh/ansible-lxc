@@ -68,10 +68,3 @@
     key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
     path: "{{ lxc_root }}/{{ container_name }}/rootfs/root/.ssh/authorized_keys"
     state: present
-
-- name: Add host to in-memory inventory
-  add_host:
-    name: "{{ container_info.lxc_container.name }}"
-    ansible_host: "{{ ansible_host }}"
-    ansible_port: 26
-    groups: ["{{ location }}", "{{ type }}", "lxc"]
