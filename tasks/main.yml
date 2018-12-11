@@ -4,7 +4,7 @@
   when: not(
           (zfs_root is undefined)
           or
-          (zfs_root is none)
+          (zfs_root == 'none')
           or
           (zfs_root | trim == '')
         )
