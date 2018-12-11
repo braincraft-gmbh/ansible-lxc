@@ -16,7 +16,6 @@
     template_options: --release stretch
     backing_store: "{{ lxc_backing_store | default('dir') }}"
     zfs_root: "{{ zfs_root }}"
-    state: stopped
   register: container_info
 
 - name: Deploy container configuration from template
@@ -30,10 +29,10 @@
 - name: Print container info
   debug:
     var: container_info
-    verbosity: 4
+    verbosity: 2
 
 - name: Wait for the network to be setup in the containers
-  when: container_info|changed
+  when: container_info is changed
   pause: seconds=5
 
 - name: Setup the container SSH
