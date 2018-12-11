@@ -24,16 +24,12 @@
     dest: "{{ lxc_root }}/{{ container_name }}/config"
   notify: restart container
 
-- meta: flush_handlers
-
 - name: Print container info
   debug:
     var: container_info
     verbosity: 2
 
-- name: Wait for the network to be setup in the containers
-  when: container_info is changed
-  pause: seconds=5
+- meta: flush_handlers
 
 - name: Setup the container SSH
   lxc_container:
