@@ -18,11 +18,5 @@ lxc.network.link = {{ host_interface_phys }}
 lxc.network.flags = up
 {% endif %}
 
-lxc.lxcpath = {{ lxc_root }}
-
-{% if zfs_root is defined %}
-lxc.bdev.zfs.root = {{ zfs_root }}
-{% endif %}
-
 lxc.start.auto = 1
 lxc.include = /usr/share/lxc/config/debian.common.conf
