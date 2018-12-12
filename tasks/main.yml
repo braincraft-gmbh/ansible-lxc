@@ -9,27 +9,30 @@
           (zfs_root | trim == '')
         )
 
+- name: Deploy container configuration from template
+  template:
+    src: container.conf.j2
+    dest: "/etc/lxc/{{ location }}.conf"
+
 - name: Create LXC container
   lxc_container:
     name: "{{ container_name }}"
+    config: "/etc/lxc/{{ location }}.conf"
     template: debian
     template_options: --release stretch
     backing_store: "{{ lxc_backing_store | default('dir') }}"
     zfs_root: "{{ zfs_root }}"
   register: container_info
 
-- name: Deploy container configuration from template
-  template:
-    src: container.conf.j2
-    dest: "{{ lxc_root }}/{{ container_name }}/config"
-  notify: restart container
+- name: Wait for network to come up
+  wait_for_connection:
+    delay: 1
+    timeout: 30
 
 - name: Print container info
   debug:
     var: container_info
     verbosity: 2
-
-- meta: flush_handlers
 
 - name: Setup the container SSH
   lxc_container:

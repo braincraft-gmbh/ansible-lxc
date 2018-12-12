@@ -5,7 +5,7 @@
     state: restarted
   listen: restart container
 
-- name: Wait for network to come up
+- name: Wait for network
   wait_for_connection:
     delay: 1
     timeout: 60
