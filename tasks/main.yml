@@ -13,6 +13,7 @@
   template:
     src: container.conf.j2
     dest: "/etc/lxc/{{ location }}.conf"
+  run_once: true
 
 - name: Create LXC container
   lxc_container:
