@@ -3,7 +3,7 @@ location: local
 container_name: "{{ {{ inventory_hostname}} | regex_replace('host.') }}"
 network_setup: false
 bridge_interface: lxcbr0
-ip_int: 'dhcp'
+interface_type: 'dhcp'
 
 zfs_root: none
 lxc_root: '/var/lib/lxc'

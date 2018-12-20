@@ -15,7 +15,7 @@ The following variables need to be present, exist as defaults in the role and re
 
 ```
 container_name: "{{ {{ inventory_hostname}} | regex_replace('host.') }}"
-ip_int: 'dhcp'
+interface_type: 'dhcp'
 network_setup: false
 bridge_interface: lxcbr0
 ```
