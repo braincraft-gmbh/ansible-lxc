@@ -25,6 +25,19 @@
     zfs_root: "{{ zfs_root }}"
   register: container_info
 
+- name: Add bind mounts
+  blockinfile:
+    path: "/{{ zfs_root }}/{{ container_name }}/config"
+    marker: "# {mark} ANSIBLE bind_mounts"
+    block: |
+      {% if bind_mounts is defined %}
+      {% for mount in bind_mounts %}
+      lxc.mount.entry = {{ mount.src }} {{ mount.dest | regex_replace('^\/') }} none bind,optional,create.dir{% if mount.opts is defined %},{{ mount.opts }} {% endif %}
+
+      {% endfor %}
+      {% endif %}
+  when: bind_mounts is defined
+
 - name: Wait for network to come up
   wait_for_connection:
     delay: 1
