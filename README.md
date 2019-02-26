@@ -14,7 +14,7 @@ Role Variables
 The following variables need to be present, exist as defaults in the role and require no additional definition in the playbooks or environment vars:
 
 ```
-container_name: "{{ {{ inventory_hostname}} | regex_replace('host.') }}"
+container_name: "{{ inventory_hostname }}"
 interface_type: 'dhcp'
 network_setup: false
 bridge_interface: lxcbr0

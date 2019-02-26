@@ -1,6 +1,6 @@
 ---
 location: local
-container_name: "{{ {{ inventory_hostname }} | regex_replace('host.') }}"
+container_name: "{{ inventory_hostname }}"
 lxc_distribution: debian
 lxc_release: stretch
 lxc_arch: amd64
