@@ -24,7 +24,7 @@ Furthermore, the role expects the variables ```location_sub``` ```type_sub``` an
 
 The following variables are undefined per default and will trigger additional setup when defined within the playbooks/run:
 
-zfs_root: "storage/{{ container_name }}/rootfs"   # will make lxc use the zfs backend
+zfs_root: none                                    # if set to a path, use the zfs backend
 host_interface_phys: "eno2"                       # physical interface from host, to be mounted in container as eth1
 
 
@@ -49,4 +49,4 @@ GNU GPLv3
 Author Information
 ------------------
 
-Gualter Barbas Baptista <gb@braincraft.de>
+Gualter Barbas Baptista <gualter@ecobytes.net>

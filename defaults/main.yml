@@ -1,6 +1,10 @@
 ---
 location: local
 container_name: "{{ {{ inventory_hostname }} | regex_replace('host.') }}"
+lxc_distribution: debian
+lxc_release: stretch
+lxc_arch: amd64
+
 network_setup: false
 bridge_interface: lxcbr0
 interface_type: 'dhcp'
