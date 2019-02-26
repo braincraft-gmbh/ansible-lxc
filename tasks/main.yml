@@ -65,3 +65,15 @@
     key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
     path: "{{ lxc_root }}/{{ container_name }}/rootfs/root/.ssh/authorized_keys"
     state: present
+
+- name: Remove old keys from known_hosts
+  known_hosts:
+    name: "{{ item.name }}"
+    state: absent
+  loop: "{{ container_info.lxc_container }}"
+
+- name: Add new keys to known_hosts
+  known_hosts:
+    name: "{{ item.0.name }}"
+    key: "{{ lookup('pipe', 'ssh-keyscan {{ item.1 }}') }}"
+  loop: "{{ lookup('subelements', container_info.lxc_container, 'ips', {'skip_missing': True}) }}"
