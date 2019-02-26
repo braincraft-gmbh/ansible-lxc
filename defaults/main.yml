@@ -1,6 +1,6 @@
 ---
 location: local
-container_name: "{{ {{ inventory_hostname}} | regex_replace('host.') }}"
+container_name: "{{ {{ inventory_hostname }} | regex_replace('host.') }}"
 network_setup: false
 bridge_interface: lxcbr0
 interface_type: 'dhcp'
