@@ -5,8 +5,52 @@
     state: restarted
   listen: restart container
 
-- name: Wait for network
+- name: Wait for network upon restart
   wait_for_connection:
     delay: 1
     timeout: 60
   listen: restart container
+
+- name: Setup the container SSH
+  lxc_container:
+    name: "{{ container_name }}"
+    container_command: apt-get update && apt-get install -y python-minimal openssh-server iputils-ping
+  listen: prepare new container
+
+- name: Create .ssh folder on container /root/
+  file:
+    dest: "{{ lxc_root }}/{{ container_name }}/rootfs/root/.ssh/"
+    state: directory
+    mode: 0700
+  listen: prepare new container
+
+- name: Set up authorized key from local ansible user on container
+  authorized_key:
+    user: root
+    key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+    path: "{{ lxc_root }}/{{ container_name }}/rootfs/root/.ssh/authorized_keys"
+    state: present
+  listen: prepare new container
+
+- name: Wait for hosts SSH to be available
+  wait_for:
+    host: "{{ container_info.lxc_container.name }}"
+    port: 22
+    state: started
+    delay: 1
+    timeout: 120
+  listen: prepare new container
+
+- name: Remove old keys from known_hosts
+  known_hosts:
+    name: "{{ container_info.lxc_container.name }}"
+    state: absent
+  delegate_to: localhost
+  listen: prepare new container
+
+- name: Add new keys to known_hosts
+  known_hosts:
+    name: "{{ container_info.lxc_container.name }}"
+    key: "{{ lookup('pipe', 'ssh-keyscan {{ container_info.lxc_container.name }}') }}"
+  delegate_to: localhost
+  listen: prepare new container

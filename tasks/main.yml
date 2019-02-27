@@ -24,6 +24,7 @@
     backing_store: "{{ lxc_backing_store | default('dir') }}"
     zfs_root: "{{ zfs_root }}"
   register: container_info
+  notify: prepare new container
 
 - name: Add bind mounts
   blockinfile:
@@ -37,43 +38,9 @@
       {% endfor %}
       {% endif %}
   when: bind_mounts is defined
-
-- name: Wait for network to come up
-  wait_for_connection:
-    delay: 1
-    timeout: 30
+  notify: restart container
 
 - name: Print container info
   debug:
     var: container_info
     verbosity: 2
-
-- name: Setup the container SSH
-  lxc_container:
-    name: "{{ container_name }}"
-    container_command: apt-get update && apt-get install -y python-minimal openssh-server iputils-ping
-
-- name: Create .ssh folder on container /root/
-  file:
-    dest: "{{ lxc_root }}/{{ container_name }}/rootfs/root/.ssh/"
-    state: directory
-    mode: 0700
-
-- name: Set up authorized key from local ansible user on container
-  authorized_key:
-    user: root
-    key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
-    path: "{{ lxc_root }}/{{ container_name }}/rootfs/root/.ssh/authorized_keys"
-    state: present
-
-- name: Remove old keys from known_hosts
-  known_hosts:
-    name: "{{ container_info.lxc_container.name }}"
-    state: absent
-  delegate_to: localhost
-
-- name: Add new keys to known_hosts
-  known_hosts:
-    name: "{{ container_info.lxc_container.name }}"
-    key: "{{ lookup('pipe', 'ssh-keyscan {{ container_info.lxc_container.name }}') }}"
-  delegate_to: localhost
