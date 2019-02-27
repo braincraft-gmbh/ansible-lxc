@@ -1,13 +1,8 @@
 ---
-- set_fact:
+- name: Set LXC backing store to ZFS
+  set_fact:
     lxc_backing_store: 'zfs'
-  when: not(
-          (zfs_root is undefined)
-          or
-          (zfs_root == 'none')
-          or
-          (zfs_root | trim == '')
-        )
+  when: zfs_root
 
 - name: Deploy container configuration from template
   template:
@@ -22,7 +17,7 @@
     template: download
     template_options: "--dist {{ lxc_distribution }} --release {{ lxc_release }} --arch {{ lxc_arch }}"
     backing_store: "{{ lxc_backing_store | default('dir') }}"
-    zfs_root: "{{ zfs_root }}"
+    zfs_root: "{{ zfs_root | default(omit) }}"
   register: container_info
   notify: prepare new container
 

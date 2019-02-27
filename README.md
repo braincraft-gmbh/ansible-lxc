@@ -45,7 +45,7 @@ If ZFS is to be used, `zfs_root` should be set to the base dataset. This will be
 used on LXC creation to create additional datasets for the containers.
 
 ```
-zfs_root: none
+# zfs_root: tank/lxc
 ```
 
 Dependencies

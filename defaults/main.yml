@@ -16,5 +16,5 @@ lxc_network:
 #    type: phys
 #    link: eth2
 
-zfs_root: none
 lxc_root: '/var/lib/lxc'
+# zfs_root: tank/lxc
