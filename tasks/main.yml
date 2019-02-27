@@ -1,104 +1,46 @@
 ---
-# tasks file for bc.lxc
-
-- name: Ensure LXC packages are installed.
-  apt:
-    name: "{{ item }}"
-  with_items:
-    - lxc
-    - python-lxc
-    - debootstrap
-    - bridge-utils
-
-- name: Setup default template for new containers
-  template:
-    src: singlecontainer.conf.j2
-    dest: /etc/lxc/default.conf
-
 - set_fact:
     lxc_backing_store: 'zfs'
   when: not(
           (zfs_root is undefined)
           or
-          (zfs_root is none)
+          (zfs_root == 'none')
           or
           (zfs_root | trim == '')
         )
 
-- name: Increase value of inotify.max_user_instances
-  sysctl:
-    name: fs.inotify.max_user_watches
-    value: 524288
-    sysctl_set: yes
-    reload: yes
+- name: Deploy container configuration from template
+  template:
+    src: container.conf.j2
+    dest: "/etc/lxc/{{ location }}.conf"
+  run_once: true
 
 - name: Create LXC container
   lxc_container:
     name: "{{ container_name }}"
-    template: debian
-    template_options: --release stretch
+    config: "/etc/lxc/{{ location }}.conf"
+    template: download
+    template_options: "--dist {{ lxc_distribution }} --release {{ lxc_release }} --arch {{ lxc_arch }}"
     backing_store: "{{ lxc_backing_store | default('dir') }}"
     zfs_root: "{{ zfs_root }}"
-    state: started
   register: container_info
+  notify: prepare new container
+
+- name: Add bind mounts
+  blockinfile:
+    path: "/{{ zfs_root }}/{{ container_name }}/config"
+    marker: "# {mark} ANSIBLE bind_mounts"
+    block: |
+      {% if bind_mounts is defined %}
+      {% for mount in bind_mounts %}
+      lxc.mount.entry = {{ mount.src }} {{ mount.dest | regex_replace('^\/') }} none bind,optional,create.dir{% if mount.opts is defined %},{{ mount.opts }} {% endif %}
+
+      {% endfor %}
+      {% endif %}
+  when: bind_mounts is defined
+  notify: restart container
 
 - name: Print container info
   debug:
     var: container_info
-    verbosity: 4
-
-- name: Setup host firewall (NAT and port forwarding)
-  block:
-    - name: Enable NAT masquerading
-      iptables:
-        table: nat
-        chain: POSTROUTING
-        out_interface: '{{ masquerade_out_interface }}'
-        source: '{{ masquerade_source }}'
-        destination: '{{ masquerade_destination }}'
-        jump: MASQUERADE
-        protocol: '{{ masquerade_protocol }}'
-        comment: Ansible NAT Masquerade
-    - name: Enable IPv4 forwarding
-      sysctl:
-        name: net.ipv4.ip_forward
-        value: 1
-        sysctl_set: yes
-        state: present
-        reload: yes
-    - name: Forward port 26 from host to container SSH (22)
-      raw: "iptables -t nat -A PREROUTING -i {{ ansible_default_ipv4.interface }} -p tcp -m tcp --dport 26 -j DNAT --to-destination {{ masquerade_source }}:22"
-    - name: Forward port 80 to container
-      raw: "iptables -A PREROUTING -t nat -i {{ ansible_default_ipv4.interface }} -p tcp --dport 80 -j DNAT --to {{ masquerade_source }}:80 && iptables -A FORWARD -p tcp -d {{ masquerade_source }} --dport 80 -j ACCEPT"
-      when: inventory_hostname in groups['webhosts']
-  when: network_setup == 'true'
-  tags: firewall
-
-- name: Wait for the network to be setup in the containers
-  when: container_info|changed
-  pause: seconds=5
-
-- name: Setup the container SSH
-  lxc_container:
-    name: "{{ container_name }}"
-    container_command: apt-get update && apt-get install -y python-minimal openssh-server iputils-ping
-
-- name: Create .ssh folder on container /root/
-  file:
-    dest: "/var/lib/lxc/{{ container_name }}/rootfs/root/.ssh/"
-    state: directory
-    mode: 0700
-
-- name: Set up authorized key from local ansible user on container
-  authorized_key:
-    user: "{{ ansible_user_id }}"
-    key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
-    path: "/var/lib/lxc/{{ container_name }}/rootfs/root/.ssh/authorized_keys"
-    state: present
-
-- name: Add host to in-memory inventory
-  add_host:
-    name: "{{ container_info.lxc_container.name }}"
-    ansible_host: "{{ ansible_host }}"
-    ansible_port: 26
-    groups: ["{{ location }}", "{{ type }}", "lxc"]
+    verbosity: 2

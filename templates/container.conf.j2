@@ -1,0 +1,16 @@
+# This config is generated from an ansible template of the bc.lxc role
+# Any local changes will be overwritten on the next ansible run!
+
+{% for network in lxc_network %}
+lxc.network.type = {{ network.type }}
+lxc.network.name = {{ network.name }}
+lxc.network.link = {{ network.link }}
+{% if network.ipv4 is defined %}
+lxc.network.ipv4 = {{ network.ipv4 }}/{{ network.ipv4_netmask }}
+lxc.network.ipv4.gateway = {{ network.ipv4_gateway }}
+{% endif %}
+lxc.network.flags = up
+{% endfor %}
+
+lxc.start.auto = 1
+lxc.include = /usr/share/lxc/config/debian.common.conf
