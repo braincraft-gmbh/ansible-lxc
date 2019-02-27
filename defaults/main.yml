@@ -5,11 +5,16 @@ lxc_distribution: debian
 lxc_release: stretch
 lxc_arch: amd64
 
-network_setup: false
-bridge_interface: lxcbr0
-interface_type: 'dhcp'
+lxc_network:
+  - name: eth0
+    type: veth
+    link: lxcbr0
+#    ipv4: '192.168.1.10'
+#    ipv4_netmask: '24'
+#    ipv4_gateway: '192.168.1.1'
+#  - name: eth1
+#    type: phys
+#    link: eth2
 
 zfs_root: none
 lxc_root: '/var/lib/lxc'
-
-# host_interface_phys: "eno2"     # phys interface from host, to be mounted in container as eth1
