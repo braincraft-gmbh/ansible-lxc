@@ -68,12 +68,12 @@
 
 - name: Remove old keys from known_hosts
   known_hosts:
-    name: "{{ item.name }}"
+    name: "{{ container_info.lxc_container.name }}"
     state: absent
-  loop: "{{ container_info.lxc_container }}"
+  delegate_to: localhost
 
 - name: Add new keys to known_hosts
   known_hosts:
-    name: "{{ item.0.name }}"
-    key: "{{ lookup('pipe', 'ssh-keyscan {{ item.1 }}') }}"
-  loop: "{{ lookup('subelements', container_info.lxc_container, 'ips', {'skip_missing': True}) }}"
+    name: "{{ container_info.lxc_container.name }}"
+    key: "{{ lookup('pipe', 'ssh-keyscan {{ container_info.lxc_container.name }}') }}"
+  delegate_to: localhost
