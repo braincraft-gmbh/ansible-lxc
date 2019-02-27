@@ -39,6 +39,7 @@
     state: started
     delay: 1
     timeout: 120
+  delegate_to: localhost
   listen: prepare new container
 
 - name: Remove old keys from known_hosts
