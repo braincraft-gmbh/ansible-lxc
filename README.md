@@ -1,13 +1,10 @@
 Role Name
 =========
 
-This role automates the setup of LXC hosts with the needed packages, create
-containers and setup the networking and forwarding rules.
+A role to provision LXC containers, with network setup and support for ZFS.
 
 Requirements
 ------------
-
-This role is designed and tested for Debian 9 (stretch).
 
 The role requires a host setup with LXC and with an available interface (e.g.
 `lxcbr0`). The role should be delegated to the host(s) where the containers are
@@ -28,7 +25,7 @@ lxc_root: '/var/lib/lxc'
 ```
 
 The hosts need at least a network, which by default is `lxcbr0` with a DHCP
-assignment. You can add also enforce static IPs and add multiple interfaces to
+assignment. You can also enforce static IPs and add multiple interfaces to
 it:
 
 ```
