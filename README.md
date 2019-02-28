@@ -48,6 +48,26 @@ used on LXC creation to create additional datasets for the containers.
 # zfs_root: tank/lxc
 ```
 
+Additional container configuration can be passed to the `container_config` var:
+
+```
+# container_config:
+#   - "lxc.aa_profile=unconfined"
+#   - "lxc.cgroup.devices.allow=a *:* rmw"
+```
+
+When a new host is created, commands set on the `container_prepare_commands` var
+will be dispatched. Following defaults allow the container to be upgraded and
+setup for ansible and SSH access:
+
+```
+container_prepare_commands: |
+  apt-get update
+  apt-get upgrade -y
+  apt-get install -y python-minimal openssh-server
+```
+
+
 Dependencies
 ------------
 

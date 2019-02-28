@@ -18,3 +18,12 @@ lxc_network:
 
 lxc_root: '/var/lib/lxc'
 # zfs_root: tank/lxc
+
+container_prepare_commands: |
+  apt-get update
+  apt-get upgrade -y
+  apt-get install -y python-minimal openssh-server
+
+# container_config:
+#   - "lxc.aa_profile=unconfined"
+#   - "lxc.cgroup.devices.allow=a *:* rmw"

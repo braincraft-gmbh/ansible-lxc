@@ -11,10 +11,10 @@
     timeout: 60
   listen: restart container
 
-- name: Setup the container SSH
+- name: Run the container prepare commands
   lxc_container:
-    name: "{{ container_name }}"
-    container_command: apt-get update && apt-get install -y python-minimal openssh-server iputils-ping
+    name: "{{ container_info.lxc_container.name }}"
+    container_command: "{{ container_prepare_commands }}"
   listen: prepare new container
 
 - name: Create .ssh folder on container /root/
