@@ -2,7 +2,7 @@
 - name: Set LXC backing store to ZFS
   set_fact:
     lxc_backing_store: 'zfs'
-  when: zfs_root
+  when: zfs_root is defined
 
 - name: Deploy container configuration from template
   template:
